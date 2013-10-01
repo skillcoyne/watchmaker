@@ -15,151 +15,192 @@
 //=============================================================================
 package org.uncommons.watchmaker.framework;
 
+import org.uncommons.maths.statistics.DataSet;
+
+import java.util.List;
+
+
 /**
  * Immutable data object containing statistics about the state of
  * an evolved population and a reference to the fittest candidate
  * solution in the population.
+ *
  * @param <T> The type of evolved entity present in the population
- * that this data describes.
- * @see EvolutionObserver
+ *            that this data describes.
  * @author Daniel Dyer
+ * @see EvolutionObserver
  */
-public final class PopulationData<T>
-{
-    private final T bestCandidate;
-    private final double bestCandidateFitness;
-    private final double meanFitness;
-    private final double fitnessStandardDeviation;
-    private final boolean naturalFitness;
-    private final int populationSize;
-    private final int eliteCount;
-    private final int generationNumber;
-    private final long elapsedTime;
+public class PopulationData<T>
+  {
+  //private final T bestCandidate;
+//  private final double bestCandidateFitness;
+//  private final double meanFitness;
+//  private final double fitnessStandardDeviation;
+  //private final int populationSize;
+  private final boolean naturalFitness;
+  private final int eliteCount;
+  private final int generationNumber;
+  private final long elapsedTime;
 
-    /**
-     * @param bestCandidate The fittest candidate present in the population.
-     * @param bestCandidateFitness The fitness score for the fittest candidate
-     * in the population.
-     * @param meanFitness The arithmetic mean of fitness scores for each member
-     * of the population.
-     * @param fitnessStandardDeviation A measure of the variation in fitness
-     * scores.
-     * @param naturalFitness True if higher fitness scores are better, false
-     * otherwise. 
-     * @param populationSize The number of individuals in the population.
-     * @param eliteCount The number of candidates preserved via elitism.
-     * @param generationNumber The (zero-based) number of the last generation
-     * that was processed.
-     * @param elapsedTime The number of milliseconds since the start of the
-     */
-    public PopulationData(T bestCandidate,
-                          double bestCandidateFitness,
-                          double meanFitness,
-                          double fitnessStandardDeviation,
-                          boolean naturalFitness,
-                          int populationSize,
-                          int eliteCount,
-                          int generationNumber,
-                          long elapsedTime)
+  private DataSet fitnessStatistics;
+
+  private final List<EvaluatedCandidate<T>> currentPopulation;
+
+  public PopulationData(List<EvaluatedCandidate<T>> population, boolean naturalFitness, int eliteCount, int generationNumber, long elapsedTime)
     {
-        this.bestCandidate = bestCandidate;
-        this.bestCandidateFitness = bestCandidateFitness;
-        this.meanFitness = meanFitness;
-        this.fitnessStandardDeviation = fitnessStandardDeviation;
-        this.naturalFitness = naturalFitness;
-        this.populationSize = populationSize;
-        this.eliteCount = eliteCount;
-        this.generationNumber = generationNumber;
-        this.elapsedTime = elapsedTime;
+    this.currentPopulation = population;
+    this.naturalFitness = naturalFitness;
+    this.elapsedTime = elapsedTime;
+    this.eliteCount = eliteCount;
+    this.generationNumber = generationNumber;
+
+    if (currentPopulation != null)
+      getStats();
+    }
+
+  private void getStats()
+    {
+    this.fitnessStatistics = new DataSet(currentPopulation.size());
+    for (EvaluatedCandidate<T> candidate : currentPopulation)
+      fitnessStatistics.addValue(candidate.getFitness());
     }
 
 
-    /**
-     * @return The fittest candidate present in the population.
-     * @see #getBestCandidateFitness()
-     */
-    public T getBestCandidate()
+  /**
+   * @param bestCandidate            The fittest candidate present in the population.
+   * @param bestCandidateFitness     The fitness score for the fittest candidate
+   *                                 in the population.
+   * @param meanFitness              The arithmetic mean of fitness scores for each member
+   *                                 of the population.
+   * @param fitnessStandardDeviation A measure of the variation in fitness
+   *                                 scores.
+   * @param naturalFitness           True if higher fitness scores are better, false
+   *                                 otherwise.
+   * @param populationSize           The number of individuals in the population.
+   * @param eliteCount               The number of candidates preserved via elitism.
+   * @param generationNumber         The (zero-based) number of the last generation
+   *                                 that was processed.
+   * @param elapsedTime              The number of milliseconds since the start of the
+   */
+//  public PopulationData(T bestCandidate, double bestCandidateFitness, double meanFitness, double fitnessStandardDeviation, boolean naturalFitness, int populationSize, int eliteCount, int generationNumber, long elapsedTime)
+//    {
+//    this.bestCandidate = bestCandidate;
+//    this.bestCandidateFitness = bestCandidateFitness;
+//    this.meanFitness = meanFitness;
+//    this.fitnessStandardDeviation = fitnessStandardDeviation;
+//    this.naturalFitness = naturalFitness;
+//    this.populationSize = populationSize;
+//    this.eliteCount = eliteCount;
+//    this.generationNumber = generationNumber;
+//    this.elapsedTime = elapsedTime;
+//    }
+
+
+  /**
+   * @return The fittest candidate present in the population.
+   * @see #getBestCandidateFitness()
+   */
+  public T getBestCandidate()
     {
-        return bestCandidate;
+    return this.currentPopulation.get(0).getCandidate();
+    //return bestCandidate;
     }
 
 
-    /**
-     * @return The fitness score of the fittest candidate.
-     * @see #getBestCandidateFitness()
-     */
-    public double getBestCandidateFitness()
+  /**
+   * @return The fitness score of the fittest candidate.
+   * @see #getBestCandidateFitness()
+   */
+  public double getBestCandidateFitness()
     {
-        return bestCandidateFitness;
+    return this.currentPopulation.get(0).getFitness();
+    //return bestCandidateFitness;
     }
 
 
-    /**
-     * Returns the average fitness score of population members.
-     * @return The arithmetic mean fitness of individual candidates.
-     */
-    public double getMeanFitness()
+  /**
+   * Returns the average fitness score of population members.
+   *
+   * @return The arithmetic mean fitness of individual candidates.
+   */
+  public double getMeanFitness()
     {
-        return meanFitness;
+    return this.fitnessStatistics.getArithmeticMean();
+    //return meanFitness;
     }
 
 
-    /**
-     * Returns a statistical measure of variation in fitness scores within
-     * the population. 
-     * @return Population standard deviation for fitness scores.
-     */
-    public double getFitnessStandardDeviation()
+  /**
+   * Returns a statistical measure of variation in fitness scores within
+   * the population.
+   *
+   * @return Population standard deviation for fitness scores.
+   */
+  public double getFitnessStandardDeviation()
     {
-        return fitnessStandardDeviation;
+    return this.fitnessStatistics.getStandardDeviation();
+    //return fitnessStandardDeviation;
+    }
+
+  public DataSet getFitnessStatistics()
+    {
+    return this.fitnessStatistics;
+    }
+
+  /**
+   * Indicates whether the fitness scores are natural or non-natural.
+   *
+   * @return True if higher fitness scores indicate fitter individuals, false
+   *         otherwise.
+   */
+  public boolean isNaturalFitness()
+    {
+    return naturalFitness;
     }
 
 
-    /**
-     * Indicates whether the fitness scores are natural or non-natural.
-     * @return True if higher fitness scores indicate fitter individuals, false
-     * otherwise.
-     */
-    public boolean isNaturalFitness()
+  /**
+   * @return The number of individuals in the current population.
+   */
+  public int getPopulationSize()
     {
-        return naturalFitness;
-    }
-
-    
-    /**
-     * @return The number of individuals in the current population.
-     */
-    public int getPopulationSize()
-    {
-        return populationSize;
+    return this.currentPopulation.size();
+    //return populationSize;
     }
 
 
-    /**
-     * @return The number of candidates preserved via elitism.
-     */
-    public int getEliteCount()
+  /**
+   * @return The number of candidates preserved via elitism.
+   */
+  public int getEliteCount()
     {
-        return eliteCount;
+    return eliteCount;
     }
 
 
-    /**
-     * @return The number of this generation (zero-based).
-     */
-    public int getGenerationNumber()
+  /**
+   * @return The number of this generation (zero-based).
+   */
+  public int getGenerationNumber()
     {
-        return generationNumber;
+    return generationNumber;
     }
 
 
-    /**
-     * Returns the amount of time (in milliseconds) since the
-     * start of the evolutionary algorithm's execution.
-     * @return How long (in milliseconds) the algorithm has been running.
-     */
-    public long getElapsedTime()
+  /**
+   * Returns the amount of time (in milliseconds) since the
+   * start of the evolutionary algorithm's execution.
+   *
+   * @return How long (in milliseconds) the algorithm has been running.
+   */
+  public long getElapsedTime()
     {
-        return elapsedTime;
+    return elapsedTime;
     }
-}
+
+  public List<EvaluatedCandidate<T>> getEvaluatedPopulation()
+    {
+    return this.currentPopulation;
+    }
+
+  }

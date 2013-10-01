@@ -22,8 +22,8 @@
 	<parent>
 		<groupId>org.uncommons.watchmaker</groupId>
 		<artifactId>watchmaker</artifactId>
-		<version>0.7.2</version>
-	</parent>
+        <version>0.7.2-sk-fork</version>
+    </parent>
 	<artifactId>watchmaker-swing</artifactId>
 
 	<dependencies>
